@@ -11,7 +11,7 @@ import SwiftUI
 struct UnitConversionsApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            UnitConversions()
         }
     }
 }
