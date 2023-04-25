@@ -9,25 +9,49 @@ import SwiftUI
 
 struct UnitConversions: View {
     
-    @State private var originalData: Double = 0.0
-    @State private var selectedVolumeUnit: Int = 1
-    @State private var volumeToConvert: Int = 1
-    @FocusState private var isFocused: Bool
-    let volumeUnits : [String] = ["milliliters", "liters", "cups", "pints", "gallons"]
+//    enum TypeofUnit : String, CaseIterable, Identifiable {
+//        case length, volume
+//        var id: Self { self }
+//    }
     
-    var yourValueToLiter : Double {
+    enum TypeofUnit : String, CaseIterable, Identifiable {
+        case length, volume
+        var id: Self { self }
+        
+        var unitArray : [String] {
+            switch self {
+            case .length :
+                return ["millimeters", "meters"]
+            case.volume :
+                return ["milliliters", "liters", "cups", "pints", "gallons"]
+            }
+        }
+    }
+    
+    @State private var originalData: Double = 0
+    @State private var selectedVolumeUnit: String = TypeofUnit.length.unitArray[0]
+    @State private var volumeToConvert: String = TypeofUnit.length.unitArray[0]
+    @State private var selectedTypeOfUnit : TypeofUnit = .length
+    @FocusState private var isFocused: Bool
+    
+    //Main unit is Meters, Liters ecc...
+    var yourValueToMainUnit : Double {
         var value : Double
         switch selectedVolumeUnit {
-        case 0:
+        case "milliliters":
             value = originalData / 1000
-        case 1:
+        case "liters":
             value = originalData
-        case 2:
+        case "cups":
             value = originalData * 0.2365882365
-        case 3:
+        case "pints":
             value = originalData * 0.473176473
-        case 4:
+        case "gallons":
             value = originalData * 3.785412
+        case "millimeters" :
+            value = originalData / 1000
+        case "meters" :
+            value = originalData * 1
         default:
             value = 0
         }
@@ -37,16 +61,20 @@ struct UnitConversions: View {
     var convertedValue : Double {
         var value : Double
         switch volumeToConvert {
-        case 0:
-            value = yourValueToLiter * 1000
-        case 1:
-            value = yourValueToLiter
-        case 2:
-            value = yourValueToLiter / 0.2365882365
-        case 3:
-            value = yourValueToLiter / 0.473176473
-        case 4:
-            value = yourValueToLiter / 3.785412
+        case "milliliters":
+            value = yourValueToMainUnit * 1000
+        case "liters":
+            value = yourValueToMainUnit
+        case "cups":
+            value = yourValueToMainUnit / 0.2365882365
+        case "pints":
+            value = yourValueToMainUnit / 0.473176473
+        case "gallons":
+            value = yourValueToMainUnit / 3.785412
+        case "millimeters":
+            value = yourValueToMainUnit * 1000
+        case "meters" :
+            value = yourValueToMainUnit * 1
         default:
             value = 0
         }
@@ -63,29 +91,36 @@ struct UnitConversions: View {
                 }
                 .keyboardType(.decimalPad)
                 .focused($isFocused)
+                .onTapGesture {
+                    originalData = Double()
+                }
                 
                 Section{
+                    Picker("Type of unit", selection: $selectedTypeOfUnit) {
+                        ForEach (TypeofUnit.allCases) { unit in
+                            Text(unit.rawValue.capitalized)
+                        }
+                    }
                     Picker ("Your data unit", selection: $selectedVolumeUnit) {
-                        ForEach(0..<5) {
-                            Text("\(volumeUnits[$0])")
+                        ForEach(selectedTypeOfUnit.unitArray, id: \.self) {unit in
+                            Text("\(unit.capitalized)")
                         }
                     }
                     Picker("Unit to be converted", selection: $volumeToConvert) {
-                        ForEach(0..<5) {
-                            Text("\(volumeUnits[$0])")
+                        ForEach(selectedTypeOfUnit.unitArray, id: \.self) { unit in
+                            Text("\(unit.capitalized)")
                         }
                     }
                 }
                 
                 Section{
-                    Text(convertedValue.formatted())
+                    Text(selectedVolumeUnit.isEmpty || volumeToConvert.isEmpty ? "0" : convertedValue.formatted())
                 } header: {
-                    Text("Converted value")
+                    Text("Convert \(selectedVolumeUnit) to \(volumeToConvert)")
                 }
                 
                 
             }
-            
             .navigationTitle("UnitConversions")
             .toolbar{
                 ToolbarItemGroup(placement: .keyboard) {
